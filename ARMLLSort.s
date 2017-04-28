@@ -11,6 +11,23 @@
 .equ SWI_Malloc, 0x12       ; Allocate heap memory
 .equ SWI_Free, 0x13         ; free that memory!
 
+
+
+@ *********************** Documentation ************************** @
+
+@ ********** This implementation is not optimized for register usage
+
+@ ********** r0 and r1 are for swi commands
+@ ********** r2 is the current node pointer
+@ ********** r3 stores the file handle
+@ ********** r4 is a tmp pointer or tmp int
+@ ********** r5 is the head node pointer
+@ ********** r7 is the return register
+@ ********** r8 is the data for the curr node
+
+
+
+
 @ ******************* main function *******************************@
 
 LLSort:
