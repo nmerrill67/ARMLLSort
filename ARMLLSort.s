@@ -30,7 +30,7 @@
 
 @ ******************* main function *******************************@
 
-LLSort:
+llSort:
 
     mov r5, #0          ; NULL pointer for head node
     
@@ -51,10 +51,12 @@ LLSort:
     mov r2, r5		; curr pointer is the  head first
 
     mov r0, #Stdout
-    ldr r1, =sortedList
+    ldr r1, =sortedListMsg
     swi SWI_PrStr
 
     mov r7, r5		; return the head pointer
+
+    bl printSortedList
 
     swi SWI_Free        ; DeAllocate All Heap Memory
 
@@ -69,7 +71,7 @@ readLoop:
 
     bcs endReached      ; Check for the end of the file
 
-    mov r1, r0          ; store int in r1 and r9
+    mov r1, r0          ; store int in r1 and r8
     mov r8, r0
 
     mov r0, #1
@@ -93,6 +95,25 @@ endReached:
 
     mov pc, lr
 
+
+printSortedList:
+
+    ldr r1, [r2, #0]    ; data in curr
+    swi SWI_PrInt
+
+    ldr r1, =space
+    swi SWI_PrStr
+
+    ldr r4, [r2, #4]    ; next pointer
+
+    cmp r4, #0      ; is the next a null pointer?
+    beq return
+
+    mov r2, r4      ; curr = next
+    b printSortedList
+    
+return:
+    mov pc, lr      ; back to where we were  in main
     
 
 @ ************* Storing Nodes ********************* @
@@ -107,16 +128,23 @@ insertLoop:
     blle insertFront
     blge checkInsert
     b insertLoop        ; loop back
+
     mov pc, lr		; back to readLoop
 
 checkInsert:
-    
+
     ldr r4, [r2, #4]	; next pointer
+
+    cmp r4, #0          ; null prt is next, we are at the back
+    bleq insertBack
+
     ldr r4, [r4]	; next data (dereferenced)
     
     cmp r8, r4		; if less than, insert (already greater than)
     blle insertNode
-
+    
+    ldr r2, [r2, #4]    ; curr = next
+    b insertLoop
 
 insertHead:
 
@@ -127,7 +155,7 @@ insertHead:
     str r1, [r0, #4]     ; store the nullptr in the node
     mov  r5, r0         ; Move the address of head to r5
 
-    mov  r2, r5		; r2 is curr. The head is now curr
+    mov r2, r5          ; start at head next time
 
     add sp, sp, #4
     ldr lr, [sp, #0]
@@ -145,7 +173,8 @@ insertFront:
     str r1, [r0, #4]     ; store the next ptr in the node
 
     mov r5, r0		; the  new head pointer
-    mov r2, r5		;  new curr
+
+    mov r2, r5          ; start at head next time
     
     add sp, sp, #4
     ldr lr, [sp, #0]
@@ -160,8 +189,13 @@ insertBack:
     str r8, [r0, #0]	; Store the data
 
 
-    str r1, [r0, #4]     ; store the next ptr in the node
+    str r0, [r2, #4]     ; store the next ptr in the old back node
     
+    mov r4, #0
+    str r4, [r0, #4]           ; null terminate the LL
+
+    mov r2, r5          ; start at head next time
+
     add sp, sp, #4
     ldr lr, [sp, #0]
     sub lr, lr, #4	; Go back to the beginning of the readLoop 
@@ -182,6 +216,8 @@ insertNode:
 
     str r0, [r2, #4]    ; store the new address in the prev    
 
+    mov r2, r5          ; start at head next time
+
     add sp, sp, #4
     ldr lr, [sp, #0]
     sub lr, lr, #4	; Go back to the beginning of the readLoop 
@@ -191,7 +227,7 @@ insertNode:
 @ *********************** String Stuff ********************* @
 
 space:
-    .asciz  "->"            
+    .asciz  " -> "            
 
 inFileName:
     .asciz  "Test.dat"
@@ -203,4 +239,4 @@ originalOrderMsg:
     .asciz "The original order in the file: \n"
 
 sortedListMsg:
-    .asciz "\nSorted list:\n
+    .asciz "\nSorted list:\n"
